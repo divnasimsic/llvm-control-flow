@@ -1,0 +1,12 @@
+build/
+*.so
+*.dylib
+*.dll
+*.a
+*.ll
+*.bc
+.*.dot
+*.dot
+*.png
+.vscode/
+.idea/
