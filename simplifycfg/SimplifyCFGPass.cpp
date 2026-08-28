@@ -75,9 +75,7 @@ namespace {
             bool Changed = false;
 
 
-            // =====================================================
             // 1. UNREACHABLE BLOCK ELIMINATION
-            // =====================================================
 
             BlocksToRemove.clear();
 
@@ -96,9 +94,7 @@ namespace {
                 BB->eraseFromParent();
             }
 
-            // =====================================================
             // 2. EMPTY BLOCK ELIMINATION
-            // =====================================================
 
             BlocksToRemove.clear();
 
