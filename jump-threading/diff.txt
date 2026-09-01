@@ -1,0 +1,26 @@
+--- 1.ll	2026-08-09 16:27:28.941250149 +0200
++++ opt_test.ll	2026-09-01 13:20:10.789471952 +0200
+@@ -12,18 +12,18 @@
+   br label %6
+ 
+ 5:                                                ; preds = %2
+-  br label %6
++  br label %10
+ 
+-6:                                                ; preds = %5, %4
+-  %.01 = phi i32 [ 1, %4 ], [ 0, %5 ]             
+-  %7 = icmp ne i32 %.01, 0                        
++6:                                                ; preds = %4
++  %.01 = phi i32 [ 1, %4 ]
++  %7 = icmp ne i32 %.01, 0
+   br i1 %7, label %8, label %10
+ 
+ 8:                                                ; preds = %6
+   %9 = add nsw i32 %1, 100
+   br label %12
+ 
+-10:                                               ; preds = %6
++10:                                               ; preds = %5, %6
+   %11 = sub nsw i32 %1, 100
+   br label %12
+ 

@@ -22,21 +22,19 @@ namespace {
 
       for(BasicBlock &BB: F){
 
-        PHINode *PN = nullptr;
-
-        for(Instruction &Inst: BB){
-          //find PHI node in  BB, first inst is phi if exists
-          if( (PN = dyn_cast<PHINode>(&Inst)))break;
-        }
-
-        if(!PN)continue;
-
-        //found first Phi Node
-        //now if terminator is conditional Branch:
+        //if terminator is conditional Branch:
 
         Instruction *Ter = BB.getTerminator();
-        BranchInst *BI = dyn_cast<BranchInst>(Ter);
+        BranchInst *BI = dyn_cast_or_null<BranchInst>(Ter);
         if(!BI || !BI->isConditional())continue;
+
+        Value *Cond = BI->getCondition();
+        if (ICmpInst *Cmp = dyn_cast<ICmpInst>(Cond)) {
+          Cond = Cmp->getOperand(0);
+        }
+        //taking PHI Node if exist
+        PHINode *PN = dyn_cast<PHINode>(Cond);
+        if (!PN || PN->getParent() != &BB) continue;
 
         //if conditional get successors:
         BasicBlock* ThenDest = BI->getSuccessor(0);
@@ -53,13 +51,13 @@ namespace {
           if(!CI)continue; //some val in runtime we don't know jet
 
           Instruction *PredTer = IncomingBB->getTerminator();
-          BranchInst *PredBI = dyn_cast<BranchInst>(PredTer);
+          BranchInst *PredBI = dyn_cast_or_null<BranchInst>(PredTer);
           if(!PredBI || !PredBI->isUnconditional())continue; //we need unconditional simple PredBI
 
           BasicBlock* NewDest = nullptr;
 
           if(CI->isOne())NewDest = ThenDest; 
-          if(CI->isZero())NewDest = ElseDest;
+          else if(CI->isZero())NewDest = ElseDest;
 
           if(NewDest){
             //redirecting IncomingBB to NewDest
@@ -76,13 +74,24 @@ namespace {
                   DestPN->addIncoming(ValFromBB,IncomingBB);
                 }
               }
+              else break;
             }
-      
-            //IncomingBB doesn't jump to BB anymore
-            PN->removeIncomingValue(i,false);
-            changed=true;
+            
+            //for all PHI Nodes in BB
+            for(Instruction &Inst: BB){
+              if(PHINode *CurrentPN = dyn_cast<PHINode>(&Inst)){
+                int idx = CurrentPN->getBasicBlockIndex(IncomingBB);
+                if(idx!=-1){
+                  CurrentPN->removeIncomingValue(idx,false);
 
-            if(PN->getNumIncomingValues()==0)break;
+                }
+              }
+              else break;
+            }
+
+            changed=true;
+            break;
+            //if(PN->getNumIncomingValues()==0)break;
           }
         } 
       }
